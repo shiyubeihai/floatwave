@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>放松漂浮 · 清风</title>
+<style>
+  :root{
+    --bg-1:#eefbfc; --bg-2:#d6f0f3; --bg-3:#bfe6ea;
+    --card:rgba(255,255,255,.7); --line:#bfdde3;
+    --text:#0f2f36; --dim:#5e838c; --accent:#17697a; --accent-soft:#dcf1f4;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overscroll-behavior:none}
+  body{
+    margin:0;padding:24px 18px;display:flex;justify-content:center;align-items:center;
+    background:
+      radial-gradient(80% 55% at 50% 0%,#ffffff 0%,rgba(255,255,255,0) 65%),
+      linear-gradient(180deg,var(--bg-1) 0%,var(--bg-2) 55%,var(--bg-3) 100%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  }
+  .app{width:100%;max-width:430px;display:flex;flex-direction:column;gap:26px;align-items:center}
+
+  header{text-align:center}
+  h1{margin:0;font-size:16px;font-weight:600;letter-spacing:1px;color:#0d2a31}
+  header p{margin:7px 0 0;font-size:11.5px;color:var(--dim);letter-spacing:.3px}
+
+  .dial{position:relative;width:min(72vw,290px);aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+  .ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+  .ring circle{fill:none;stroke-linecap:round}
+  .ring .track{stroke:#ffffff;stroke-width:6;opacity:.85}
+  .ring .prog{stroke:var(--accent);stroke-width:6;transition:stroke-dashoffset .25s linear}
+
+  .readout{position:relative;text-align:center}
+  #time{
+    font-size:clamp(42px,12vw,54px);font-weight:300;letter-spacing:2px;
+    font-variant-numeric:tabular-nums;line-height:1;color:#0d2a31;
+  }
+  #hint{margin-top:10px;font-size:12px;color:var(--dim);letter-spacing:.5px;min-height:16px}
+
+  .actions{display:flex;align-items:center;gap:10px}
+  .primary{
+    font:inherit;font-size:14.5px;font-weight:600;letter-spacing:1px;
+    padding:13px 44px;border-radius:999px;border:none;cursor:pointer;
+    background:linear-gradient(180deg,#2b8a9c,#145f6e);color:#f2fbfc;
+    box-shadow:0 8px 20px rgba(18,90,105,.3),inset 0 1px 0 rgba(255,255,255,.22);
+    transition:transform .1s,box-shadow .15s;
+  }
+  .primary:active{transform:translateY(1px);box-shadow:0 4px 12px rgba(18,90,105,.26)}
+  .ghost{
+    font:inherit;font-size:13px;padding:11px 18px;border-radius:999px;cursor:pointer;
+    background:var(--card);border:1px solid var(--line);color:var(--dim);
+  }
+  .ghost:hover{color:var(--text);border-color:#a6c9d0}
+  .ghost[hidden]{display:none}
+
+  .settings{width:100%;background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:13px;box-shadow:0 10px 26px rgba(90,120,130,.08)}
+  .row{display:flex;align-items:center;gap:10px}
+  .label{font-size:11.5px;color:var(--dim);letter-spacing:1px;min-width:34px;flex-shrink:0}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chips button{
+    font:inherit;font-size:12px;padding:6px 11px;border-radius:999px;cursor:pointer;
+    background:#fff;border:1px solid var(--line);color:#63757d;transition:.15s;
+  }
+  .chips button:hover:not(:disabled){border-color:#a6cbd3;color:#1f5a66}
+  .chips button.on{background:var(--accent-soft);border-color:#9fc6cf;color:var(--accent);font-weight:600}
+  .chips button:disabled{opacity:.45;cursor:not-allowed}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;flex:1;height:3px;border-radius:2px;
+    background:#cfdfe2;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--accent);box-shadow:0 2px 6px rgba(70,120,114,.35);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border:none;border-radius:50%;
+    background:var(--accent);cursor:pointer;
+  }
+  #volVal{font-size:11.5px;color:var(--dim);min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
+
+  @media (max-height:760px){
+    .app{gap:18px}
+    .dial{width:min(54vh,250px)}
+    .settings{padding:12px 14px;gap:10px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>放松漂浮 · 清风</h1>
+    <p>微风与钟声 · 到点轻响一声</p>
+  </header>
+
+  <div class="dial">
+    <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="track" cx="100" cy="100" r="92"></circle>
+      <circle class="prog" id="prog" cx="100" cy="100" r="92"></circle>
+    </svg>
+    <div class="readout">
+      <div id="time">45:00</div>
+      <div id="hint">准备开始</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="btnMain" class="primary" type="button">开始</button>
+    <button id="btnReset" class="ghost" type="button" hidden>重置</button>
+  </div>
+
+  <section class="settings">
+    <div class="row">
+      <span class="label">时长</span>
+      <div class="chips" id="chips">
+        <button type="button" data-min="5">五分钟</button>
+        <button type="button" data-min="15">一刻</button>
+        <button type="button" data-min="30">两刻</button>
+        <button type="button" data-min="45" class="on">三刻</button>
+      </div>
+    </div>
+    <div class="row">
+      <span class="label">声音</span>
+      <div class="chips" id="sounds">
+        <button type="button" data-sound="breeze" class="on">微风</button>
+        <button type="button" data-sound="bell">钟声</button>
+        <button type="button" data-sound="chime">金属风铃</button>
+        <button type="button" data-sound="forest">树林</button>
+      </div>
+    </div>
+    <div class="row">
+      <span class="label">音量</span>
+      <input id="vol" type="range" min="0" max="100" value="55">
+      <span id="volVal">55</span>
+    </div>
+  </section>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   0. 常量与四种水声
+   ============================================================ */
+const CFG = {
+  FADE_IN: 2.5,        // 起播淡入（秒）
+  FADE_OUT: 4.0,       // 计时结束淡出（秒）
+  PAUSE_FADE: 0.5,     // 暂停/继续的淡化（秒）
+  BROWN_SEC: 10,       // 低频噪声循环长度
+  PINK_SEC: 11,        // 高频噪声循环长度（与 10 互质，叠加周期 110 秒）
+  WHITE_SEC: 7,        // 白噪声，敲击颗粒用（带通后能量才够厚）
+  CROSSFADE: 0.8,      // 循环接缝交叉淡化
+  MAX_GAIN: 1.1        // 音量滑杆拉满时的总线增益
+};
+
+/*
+  清风版四种声音
+  breeze：纯气流，低通噪声 + 阵风起伏
+  bell：钟，以 216Hz 为宫的三分损益五声，不谐和分音 + 长余音 + 拍频
+  chime：金属风铃，一阵 3–6 只铃管，余音 1–4 秒
+  forest：风吹过树林，高频沙沙 + 快速阵风
+*/
+const SOUNDS = {
+  breeze: { kind: 'breeze', trim: 1.0 },
+  bell:   { kind: 'bell',   minGap: 11.0, maxGap: 18.0, trim: 1.0 },
+  chime:  { kind: 'metal',  minGap: 8.0,  maxGap: 15.0, trim: 1.0 },
+  forest: { kind: 'forest', trim: 1.0 }
+};
+let currentSound = 'breeze';
+
+const A = { ctx: null, ready: false, master: null, active: null };
+let BUFS = null;
+
+/* ============================================================
+   1. 噪声生成
+   ============================================================ */
+function ensureCtx() {
+  if (!A.ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    A.ctx = new AC();
+  }
+  if (A.ctx.state === 'suspended') A.ctx.resume();
+  return A.ctx;
+}
+
+/* 布朗噪声：能量偏向低频，像水流的主体 */
+function fillBrown(data) {
+  let last = 0;
+  for (let i = 0; i < data.length; i++) {
+    const white = Math.random() * 2 - 1;
+    last = (last + 0.02 * white) / 1.02;
+    data[i] = last * 3.5;
+  }
+}
+
+/* 白噪声：能量平直，经窄带带通后仍有实心感，用来做敲击颗粒 */
+function fillWhite(data) {
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+}
+
+/* 粉红噪声（Paul Kellet 近似）：能量偏中高频，像水花细响 */
+function fillPink(data) {
+  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+  for (let i = 0; i < data.length; i++) {
+    const white = Math.random() * 2 - 1;
+    b0 = 0.99886 * b0 + white * 0.0555179;
+    b1 = 0.99332 * b1 + white * 0.0750759;
+    b2 = 0.96900 * b2 + white * 0.1538520;
+    b3 = 0.86650 * b3 + white * 0.3104856;
+    b4 = 0.55000 * b4 + white * 0.5329522;
+    b5 = -0.7616 * b5 - white * 0.0168980;
+    const out = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+    b6 = white * 0.115926;
+    data[i] = out * 0.11;
+  }
+}
+
+/*
+  生成可无缝循环的噪声缓冲：
+  多生成一段尾巴，把尾巴交叉淡化进开头，
+  这样从末尾跳回开头时，接缝和普通相邻采样没有区别。
+*/
+function makeLoopBuffer(ctx, seconds, filler) {
+  const sr = ctx.sampleRate;
+  const n = Math.floor(seconds * sr);
+  const fade = Math.floor(CFG.CROSSFADE * sr);
+  const raw = new Float32Array(n + fade);
+  filler(raw);
+
+  let peak = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const v = Math.abs(raw[i]);
+    if (v > peak) peak = v;
+  }
+  if (peak > 0) {
+    const k = 0.9 / peak;
+    for (let i = 0; i < raw.length; i++) raw[i] *= k;
+  }
+
+  const buf = ctx.createBuffer(1, n, sr);
+  const d = buf.getChannelData(0);
+  d.set(raw.subarray(0, n));
+
+  for (let i = 0; i < fade; i++) {
+    const t = i / fade;
+    d[n - fade + i] = raw[n - fade + i] * (1 - t) + raw[n + i] * t;
+  }
+  return buf;
+}
+
+function getBuffers(ctx) {
+  if (BUFS && BUFS.sr === ctx.sampleRate) return BUFS;
+  BUFS = {
+    sr: ctx.sampleRate,
+    brown: makeLoopBuffer(ctx, CFG.BROWN_SEC, fillBrown),
+    pink: makeLoopBuffer(ctx, CFG.PINK_SEC, fillPink),
+    white: makeLoopBuffer(ctx, CFG.WHITE_SEC, fillWhite)
+  };
+  return BUFS;
+}
+
+/* ============================================================
+   2. 包络调度（湖浪用）
+   ============================================================ */
+/*
+  在未来的时间轴上连续排布"涨—落"包络。
+  每 300ms 向前看 2 秒，保证自动化曲线不会断档。
+*/
+function scheduleSwells(ctx, param, o) {
+  let next = ctx.currentTime + 0.5;
+  let first = true;
+
+  param.setValueAtTime(param.value, ctx.currentTime);
+
+  const timer = setInterval(function () {
+    const now = ctx.currentTime;
+    let guard = 0;
+
+    while (next < now + 2.0 && guard++ < 12) {
+      const gap = o.minGap + Math.random() * (o.maxGap - o.minGap);
+      const peak = o.minPeak + Math.random() * (o.maxPeak - o.minPeak);
+      const floor = o.minFloor + Math.random() * (o.maxFloor - o.minFloor);
+      const rise = o.rise * (0.7 + Math.random() * 0.6);
+
+      // 第一段用 ramp 接住初始值，避免切换瞬间的阶跃产生咔哒声
+      if (first) {
+        param.linearRampToValueAtTime(Math.max(0.0001, floor), next);
+        first = false;
+      } else {
+        param.setValueAtTime(Math.max(0.0001, floor), next);
+      }
+      param.linearRampToValueAtTime(Math.max(0.0001, peak), next + rise);
+      param.linearRampToValueAtTime(Math.max(0.0001, floor), next + gap);
+
+      next += gap;
+    }
+  }, 300);
+
+  return function () { clearInterval(timer); };
+}
+
+/* ============================================================
+   3. 敲击类声音：钟 / 金属风铃
+   ============================================================ */
+
+/* 敲击瞬态：取一段粉红噪声做极短的带通爆发 */
+function strikeNoise(ctx, dest, t, freq, q, peak, dur, buf) {
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = freq;
+  bp.Q.value = q;
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+  src.connect(bp);
+  bp.connect(g);
+  g.connect(dest);
+  src.start(t, Math.random() * 5);
+  src.stop(t + dur + 0.02);
+}
+
+/*
+  钟：以宫 = 216Hz 为基准的三分损益五声
+  宫 216 → 徵 288（×4/3）→ 商 144（×2/3）→ 羽 192（×4/3）→ 角 128（×2/3）
+*/
+const BELL_GONG = 216;
+const BELL_NOTES = [216, 288, 144, 192, 128];
+
+function strikeBell(ctx, dest, buf) {
+  const t = ctx.currentTime + 0.01;
+
+  /* 六成落在宫音，钟有主调，不会变成随手敲的旋律 */
+  const f0 = Math.random() < 0.6
+    ? BELL_GONG
+    : BELL_NOTES[Math.floor(Math.random() * BELL_NOTES.length)];
+
+  /*
+    钟的分音比刻意不是整数：hum 0.5、prime 1、tierce 1.183、
+    quint 1.506、nominal 2、再往上是 2.74 / 3 / 4.08。
+    整数泛音听上去像管子，不谐和分音才有金属味。
+  */
+  const PARTIALS = [
+    { r: 0.5,   a: 0.40, d: 9.0 },
+    { r: 1.0,   a: 0.50, d: 7.5 },
+    { r: 1.183, a: 0.24, d: 5.0 },
+    { r: 1.506, a: 0.18, d: 3.8 },
+    { r: 2.0,   a: 0.20, d: 3.2 },
+    { r: 2.74,  a: 0.09, d: 2.0 },
+    { r: 3.0,   a: 0.07, d: 1.6 },
+    { r: 4.08,  a: 0.04, d: 1.1 }
+  ];
+
+  const peak = 0.20;
+
+  PARTIALS.forEach(function (p) {
+    /* 每个分音用两只差 0.15–0.5Hz 的振荡器，做出钟声的缓慢拍频 */
+    const beat = 0.15 + Math.random() * 0.35;
+    const f = f0 * p.r;
+
+    [-beat / 2, beat / 2].forEach(function (offset, k) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f + offset, t);
+
+      const amp = peak * p.a * (k ? 0.9 : 1.0);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, amp), t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + p.d);
+
+      osc.connect(g);
+      g.connect(dest);
+      osc.start(t);
+      osc.stop(t + p.d + 0.05);
+    });
+  });
+
+  /* 槌头击中的瞬间：极短的宽带噪声，才算「敲」而不是「吹」 */
+  strikeNoise(ctx, dest, t, 2600, 1.1, 0.06, 0.035, buf);
+  strikeNoise(ctx, dest, t, 700, 1.8, 0.05, 0.05, buf);
+}
+
+/*
+  金属风铃：一阵风过，3–6 只铃管差不多同时相碰。
+  每只音高不同、起音错开 0–0.35 秒，余音 1–4 秒，叠起来是一片「叮——」。
+*/
+function strikeChime(ctx, dest, buf) {
+  const t0 = ctx.currentTime + 0.01;
+  const count = 3 + Math.floor(Math.random() * 4);      // 3–6 只
+  const NOTES = [1296, 1728, 864, 1152, 768];           // 216 宫系五声 ×6
+
+  for (let i = 0; i < count; i++) {
+    const t = t0 + Math.random() * 0.35;
+    const f0 = NOTES[Math.floor(Math.random() * NOTES.length)];
+    const peak = 0.13 * (0.6 + Math.random() * 0.6);
+
+    /* 铃管的分音比突出 2.76，听感是「叮」而不是「咚」 */
+    const PARTIALS = [
+      { r: 1.0,  a: 1.00, d: 2.4 + Math.random() * 1.6 },
+      { r: 2.76, a: 0.30, d: 0.9 },
+      { r: 5.40, a: 0.10, d: 0.5 }
+    ];
+
+    PARTIALS.forEach(function (p) {
+      const beat = 0.4 + Math.random() * 0.9;
+      const f = f0 * p.r;
+
+      [-beat / 2, beat / 2].forEach(function (offset, k) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f + offset, t);
+
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(
+          Math.max(0.0002, peak * p.a * (k ? 0.85 : 1)), t + 0.003
+        );
+        g.gain.exponentialRampToValueAtTime(0.0001, t + p.d);
+
+        osc.connect(g);
+        g.connect(dest);
+        osc.start(t);
+        osc.stop(t + p.d + 0.05);
+      });
+    });
+
+    /* 铃锤相碰的细碎高频，很短 */
+    strikeNoise(ctx, dest, t, 5200, 1.4, 0.05, 0.025, buf);
+  }
+}
+
+/* 按随机间隔调度敲击 */
+function scheduleHits(ctx, dest, cfg, bufs) {
+  let next = ctx.currentTime + 0.8;
+
+  const timer = setInterval(function () {
+    const now = ctx.currentTime;
+    let guard = 0;
+
+    while (next < now + 2.0 && guard++ < 16) {
+      if (cfg.kind === 'bell') strikeBell(ctx, dest, bufs.white);
+      else strikeChime(ctx, dest, bufs.white);
+
+      next += cfg.minGap + Math.random() * (cfg.maxGap - cfg.minGap);
+    }
+  }, 250);
+
+  return function () { clearInterval(timer); };
+}
+
+/* ============================================================
+   4. 声音构建
+   ============================================================ */
+function buildSound(ctx, name) {
+  const cfg = SOUNDS[name] || SOUNDS.breeze;
+  const buf = getBuffers(ctx);
+
+  const out = ctx.createGain();
+  out.gain.value = 0;
+
+  const kill = [];
+  const trackNode = function (node) {
+    kill.push(function () { try { node.stop(); } catch (err) {} });
+  };
+  const trackFn = function (fn) { kill.push(fn); };
+
+  if (cfg.kind === 'forest') {
+    /* 树叶摩擦：粉红噪声切掉低频，中心在 1.8k–5k 之间游走 */
+    const src = ctx.createBufferSource();
+    src.buffer = buf.pink;
+    src.loop = true;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 950;
+
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 2600;
+    bp.Q.value = 0.75;
+
+    const body = ctx.createGain();
+    body.gain.value = 0.30;
+
+    src.connect(hp);
+    hp.connect(bp);
+    bp.connect(body);
+    body.connect(out);
+    src.start(0, Math.random() * 3);
+    trackNode(src);
+
+    /* 两路慢 LFO 叠加：风的亮度先掠过树顶再下到树腰 */
+    const l1 = ctx.createOscillator();
+    l1.frequency.value = 0.11;
+    const l1g = ctx.createGain();
+    l1g.gain.value = 1500;
+    l1.connect(l1g);
+    l1g.connect(bp.frequency);
+    l1.start();
+    trackNode(l1);
+
+    const l2 = ctx.createOscillator();
+    l2.frequency.value = 0.33;
+    const l2g = ctx.createGain();
+    l2g.gain.value = 620;
+    l2.connect(l2g);
+    l2g.connect(bp.frequency);
+    l2.start();
+    trackNode(l2);
+
+    /* 阵风比微风快得多：1.6–4.2 秒一阵 */
+    trackFn(scheduleSwells(ctx, body.gain, {
+      minGap: 1.6, maxGap: 4.2, rise: 0.55,
+      minPeak: 0.55, maxPeak: 0.95,
+      minFloor: 0.18, maxFloor: 0.34
+    }));
+
+    /* 树梢细碎抖动：更窄更高的一层，单独走一套更快的起伏 */
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buf.pink;
+    src2.loop = true;
+
+    const bp2 = ctx.createBiquadFilter();
+    bp2.type = 'bandpass';
+    bp2.frequency.value = 4600;
+    bp2.Q.value = 2.2;
+
+    const flutter = ctx.createGain();
+    flutter.gain.value = 0.05;
+
+    src2.connect(bp2);
+    bp2.connect(flutter);
+    flutter.connect(out);
+    src2.start(0, Math.random() * 3);
+    trackNode(src2);
+
+    trackFn(scheduleSwells(ctx, flutter.gain, {
+      minGap: 0.9, maxGap: 2.4, rise: 0.3,
+      minPeak: 0.03, maxPeak: 0.13,
+      minFloor: 0.004, maxFloor: 0.02
+    }));
+
+    /* 远处的树干与空气底：很轻的低频 */
+    const src3 = ctx.createBufferSource();
+    src3.buffer = buf.brown;
+    src3.loop = true;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 190;
+
+    const deep = ctx.createGain();
+    deep.gain.value = 0.16;
+
+    src3.connect(lp);
+    lp.connect(deep);
+    deep.connect(out);
+    src3.start(0, Math.random() * 3);
+    trackNode(src3);
+
+  } else if (cfg.kind === 'breeze') {
+    /* 主体气流：粉红噪声 → 低通（慢摆）→ 阵风包络 */
+    const srcA = ctx.createBufferSource();
+    srcA.buffer = buf.pink;
+    srcA.loop = true;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 520;
+    lp.Q.value = 0.6;
+
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 90;
+
+    const body = ctx.createGain();
+    body.gain.value = 0.42;
+
+    srcA.connect(lp);
+    lp.connect(hp);
+    hp.connect(body);
+    body.connect(out);
+    srcA.start(0, Math.random() * 3);
+    trackNode(srcA);
+
+    /* 滤波中心极慢地漂移，风才有「方向变化」 */
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.045;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 240;
+    lfo.connect(lfoGain);
+    lfoGain.connect(lp.frequency);
+    lfo.start();
+    trackNode(lfo);
+
+    /* 4–9 秒一阵的强弱起伏 */
+    trackFn(scheduleSwells(ctx, body.gain, {
+      minGap: 4.5, maxGap: 9.0, rise: 1.5,
+      minPeak: 0.6, maxPeak: 0.95,
+      minFloor: 0.3, maxFloor: 0.48
+    }));
+
+    /* 掠过缝隙的气流声：2.3kHz 附近，单独一套更慢的起伏 */
+    const srcB = ctx.createBufferSource();
+    srcB.buffer = buf.pink;
+    srcB.loop = true;
+
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 2300;
+    bp.Q.value = 1.4;
+
+    const whistle = ctx.createGain();
+    whistle.gain.value = 0.05;
+
+    srcB.connect(bp);
+    bp.connect(whistle);
+    whistle.connect(out);
+    srcB.start(0, Math.random() * 3);
+    trackNode(srcB);
+
+    trackFn(scheduleSwells(ctx, whistle.gain, {
+      minGap: 5.5, maxGap: 11.0, rise: 2.0,
+      minPeak: 0.04, maxPeak: 0.16,
+      minFloor: 0.008, maxFloor: 0.03
+    }));
+
+  } else {
+    /* 铃声类：一层极轻的气床，避免两次敲击之间死寂 */
+    const srcA = ctx.createBufferSource();
+    srcA.buffer = buf.pink;
+    srcA.loop = true;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 700;
+    lp.Q.value = 0.5;
+
+    const bed = ctx.createGain();
+    bed.gain.value = 0.10;
+
+    srcA.connect(lp);
+    lp.connect(bed);
+    bed.connect(out);
+    srcA.start(0, Math.random() * 3);
+    trackNode(srcA);
+
+    trackFn(scheduleHits(ctx, out, cfg, buf));
+  }
+
+  return {
+    name: name,
+    out: out,
+    stop: function () {
+      kill.forEach(function (fn) { fn(); });
+      kill.length = 0;
+    }
+  };
+}
+
+/* ============================================================
+   5. 主链路与切换
+   ============================================================ */
+function initAudio() {
+  if (A.ready) return A;
+  const ctx = ensureCtx();
+  if (!ctx) return null;
+
+  getBuffers(ctx);
+
+  const master = ctx.createGain();
+  master.gain.value = 0;
+
+  /* 软削波：y = tanh(x)，音量拉满也不会撞到 1.0 */
+  const pre = ctx.createGain();
+  pre.gain.value = 0.5;
+
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(2048);
+  for (let i = 0; i < curve.length; i++) {
+    const x = (i * 2) / (curve.length - 1) - 1;
+    curve[i] = Math.tanh(2 * x);
+  }
+  shaper.curve = curve;
+  shaper.oversample = '2x';
+
+  master.connect(pre);
+  pre.connect(shaper);
+  shaper.connect(ctx.destination);
+
+  A.ctx = ctx;
+  A.master = master;
+  A.ready = true;
+
+  applySound(currentSound, true);
+  return A;
+}
+
+/* 切换水声：新声源淡入，旧声源淡出后停掉 */
+function applySound(name, instant) {
+  if (!SOUNDS[name]) return;
+  if (A.active && A.active.name === name) { currentSound = name; renderAll(); return; }
+
+  currentSound = name;
+  if (!A.ready) { renderAll(); return; }
+
+  const ctx = A.ctx;
+  const next = buildSound(ctx, name);
+  next.out.gain.value = 0;
+  next.out.connect(A.master);
+
+  const t = ctx.currentTime;
+  const fade = instant ? 0.05 : 0.5;
+  next.out.gain.setValueAtTime(0.0001, t);
+  next.out.gain.linearRampToValueAtTime(SOUNDS[name].trim, t + fade);
+
+  if (A.active) {
+    const old = A.active;
+    const g = old.out.gain;
+    if (typeof g.cancelAndHoldAtTime === 'function') g.cancelAndHoldAtTime(t);
+    else {
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(Math.max(0.0001, g.value), t);
+    }
+    g.linearRampToValueAtTime(0.0001, t + 0.35);
+    setTimeout(function () {
+      try { old.out.disconnect(); } catch (err) {}
+      old.stop();
+    }, 800);
+  }
+
+  A.active = next;
+}
+
+function volumeGain() {
+  const v = Number(document.getElementById('vol').value) / 100;
+  return Math.pow(v, 1.5) * CFG.MAX_GAIN;
+}
+
+function fadeTo(target, seconds) {
+  if (!A.ready) return;
+  const g = A.master.gain;
+  const now = A.ctx.currentTime;
+  if (typeof g.cancelAndHoldAtTime === 'function') g.cancelAndHoldAtTime(now);
+  else {
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(Math.max(0.0001, g.value), now);
+  }
+  g.linearRampToValueAtTime(Math.max(0.0001, target), now + seconds);
+}
+
+/* 结束提示音：两声柔和的正弦 */
+function chime() {
+  if (!A.ready) return;
+  const ctx = A.ctx;
+  const t = ctx.currentTime;
+
+  [660, 990].forEach(function (freq, i) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+
+    const peak = i === 0 ? 0.16 : 0.07;
+    gain.gain.setValueAtTime(0.0001, t + i * 0.16);
+    gain.gain.linearRampToValueAtTime(peak, t + i * 0.16 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.16 + 1.6);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t + i * 0.16);
+    osc.stop(t + i * 0.16 + 1.7);
+  });
+}
+
+/* ============================================================
+   6. 计时器
+   ============================================================ */
+const T = {
+  durationMs: 45 * 60000,
+  remainMs: 45 * 60000,
+  endAt: 0,
+  running: false,
+  finished: false,
+  tickId: 0
+};
+
+function fmt(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function tick() {
+  const left = T.endAt - performance.now();
+  if (left <= 0) {
+    T.remainMs = 0;
+    finish();
+    return;
+  }
+  T.remainMs = left;
+  renderTime();
+}
+
+function startTimer() {
+  if (T.running) return;
+  initAudio();
+  if (!A.ready) { setHint('此浏览器不支持 Web Audio'); return; }
+  ensureCtx();
+
+  T.running = true;
+  T.finished = false;
+  T.endAt = performance.now() + T.remainMs;
+  fadeTo(volumeGain(), CFG.FADE_IN);
+  requestWakeLock();
+
+  clearInterval(T.tickId);
+  T.tickId = setInterval(tick, 200);
+  renderAll();
+}
+
+function pauseTimer() {
+  if (!T.running) return;
+  T.remainMs = Math.max(0, T.endAt - performance.now());
+  T.running = false;
+  clearInterval(T.tickId);
+  fadeTo(0, CFG.PAUSE_FADE);
+  releaseWakeLock();
+  renderAll();
+}
+
+function resetTimer() {
+  T.running = false;
+  T.finished = false;
+  clearInterval(T.tickId);
+  T.remainMs = T.durationMs;
+  fadeTo(0, 0.4);
+  releaseWakeLock();
+  renderAll();
+}
+
+function finish() {
+  T.running = false;
+  T.finished = true;
+  clearInterval(T.tickId);
+  releaseWakeLock();
+  fadeTo(0, CFG.FADE_OUT);
+  chime();
+  renderAll();
+}
+
+/* ============================================================
+   7. UI 渲染
+   ============================================================ */
+const RING_C = 2 * Math.PI * 92;
+
+function setHint(text) {
+  document.getElementById('hint').textContent = text;
+}
+
+function renderTime() {
+  document.getElementById('time').textContent = fmt(T.remainMs);
+  const done = T.durationMs > 0 ? 1 - T.remainMs / T.durationMs : 0;
+  document.getElementById('prog').style.strokeDashoffset = String(RING_C * (1 - done));
+}
+
+function renderAll() {
+  renderTime();
+
+  const main = document.getElementById('btnMain');
+  const resetBtn = document.getElementById('btnReset');
+  const chips = Array.from(document.querySelectorAll('#chips button'));
+
+  if (T.running) {
+    main.textContent = '暂停';
+    resetBtn.hidden = true;
+    setHint('进行中 · 跟着自己的节奏呼吸');
+  } else if (T.finished) {
+    main.textContent = '再来一次';
+    resetBtn.hidden = false;
+    setHint('时间到');
+  } else if (T.remainMs < T.durationMs) {
+    main.textContent = '继续';
+    resetBtn.hidden = false;
+    setHint('已暂停');
+  } else {
+    main.textContent = '开始';
+    resetBtn.hidden = true;
+    setHint('准备开始');
+  }
+
+  chips.forEach(function (b) {
+    b.disabled = T.running;
+    b.classList.toggle('on', Number(b.dataset.min) * 60000 === T.durationMs);
+  });
+
+  Array.from(document.querySelectorAll('#sounds button')).forEach(function (b) {
+    b.classList.toggle('on', b.dataset.sound === currentSound);
+  });
+}
+
+/* ============================================================
+   8. 屏幕常亮（可用时）
+   ============================================================ */
+let wakeLock = null;
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', function () { wakeLock = null; });
+    }
+  } catch (err) { /* 不支持或被拒绝：忽略 */ }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    try { wakeLock.release(); } catch (err) {}
+    wakeLock = null;
+  }
+}
+
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible' && T.running) {
+    tick();
+    requestWakeLock();
+  }
+});
+
+/* ============================================================
+   9. 事件绑定
+   ============================================================ */
+document.getElementById('btnMain').addEventListener('click', function () {
+  if (T.running) {
+    pauseTimer();
+  } else {
+    if (T.finished || T.remainMs <= 0) {
+      T.remainMs = T.durationMs;
+      T.finished = false;
+    }
+    startTimer();
+  }
+});
+
+document.getElementById('btnReset').addEventListener('click', resetTimer);
+
+document.getElementById('chips').addEventListener('click', function (e) {
+  const btn = e.target.closest ? e.target.closest('button[data-min]') : null;
+  if (!btn || T.running) return;
+  const ms = Number(btn.dataset.min) * 60000;
+  if (!Number.isFinite(ms) || ms <= 0) return;
+  T.durationMs = ms;
+  T.remainMs = ms;
+  T.finished = false;
+  renderAll();
+});
+
+document.getElementById('sounds').addEventListener('click', function (e) {
+  const btn = e.target.closest ? e.target.closest('button[data-sound]') : null;
+  if (!btn) return;
+  applySound(btn.dataset.sound, false);
+  renderAll();
+});
+
+document.getElementById('vol').addEventListener('input', function () {
+  document.getElementById('volVal').textContent = this.value;
+  if (A.ready) {
+    A.master.gain.setTargetAtTime(volumeGain(), A.ctx.currentTime, 0.08);
+  }
+});
+
+/* ============================================================
+   10. 启动
+   ============================================================ */
+const prog = document.getElementById('prog');
+prog.style.strokeDasharray = String(RING_C);
+prog.style.strokeDashoffset = '0';
+renderAll();
+</script>
+</body>
+</html>
