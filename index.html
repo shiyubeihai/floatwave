@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>放松漂浮 · Floatwave</title>
+<meta name="description" content="极简白噪音与计时器系列：水域、清风、夜色。">
+<meta name="theme-color" content="#e8f2e8">
+<style>
+  :root{
+    --bg:        #e8f2e8;   /* 主背景：淡绿 */
+    --bg-glow:   #f4faf3;   /* 顶部微光 */
+    --card:      rgba(255,255,255,.62);
+    --card-hover:rgba(255,255,255,.95);
+    --line:      rgba(34,50,42,.09);
+    --ink:       #22322a;
+    --muted:     #5f7468;
+    --accent:    #4a7c59;
+    --radius:    18px;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100dvh;
+    padding:56px 20px 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:36px;
+    background:
+      radial-gradient(130% 80% at 50% -12%, var(--bg-glow), transparent 62%),
+      var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI",
+                "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+
+  /* ---------- 页头 ---------- */
+  header{ text-align:center; }
+
+  h1{
+    margin:0;
+    font-size:clamp(26px, 6vw, 34px);
+    font-weight:600;
+    letter-spacing:.14em;   /* 中文标题留白更松弛 */
+  }
+
+  .sub{
+    margin:10px 0 0;
+    font-size:14px;
+    letter-spacing:.22em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  /* ---------- 列表 ---------- */
+  nav{
+    width:100%;
+    max-width:440px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .item{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:18px 20px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--card);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+    color:inherit;
+    text-decoration:none;
+    transition:background .22s ease, transform .22s ease, box-shadow .22s ease;
+  }
+
+  .item:hover,
+  .item:focus-visible{
+    background:var(--card-hover);
+    transform:translateY(-2px);
+    box-shadow:0 10px 26px -14px rgba(34,50,42,.32);
+    outline:none;
+  }
+
+  .item:active{ transform:translateY(0); }
+
+  /* 每项的氛围色点 */
+  .dot{
+    flex:0 0 auto;
+    width:10px; height:10px;
+    border-radius:50%;
+    background:var(--c, var(--accent));
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--c, var(--accent)) 16%, transparent);
+  }
+
+  .text{ flex:1 1 auto; min-width:0; }
+
+  .name{
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:.06em;
+  }
+
+  .desc{
+    font-size:13px;
+    color:var(--muted);
+    letter-spacing:.02em;
+  }
+
+  .arrow{
+    flex:0 0 auto;
+    font-size:15px;
+    color:var(--muted);
+    opacity:.5;
+    transition:opacity .22s ease, transform .22s ease;
+  }
+
+  .item:hover .arrow{ opacity:1; transform:translateX(3px); }
+
+  /* 实验中的项用虚线边框表达 */
+  .item--wip{ border-style:dashed; }
+
+  .badge{
+    margin-left:6px;
+    padding:1px 7px;
+    border-radius:99px;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.06em;
+    color:var(--muted);
+    background:rgba(74,124,89,.10);
+    vertical-align:2px;
+  }
+
+  /* ---------- 页脚 ---------- */
+  footer{
+    font-size:12px;
+    letter-spacing:.1em;
+    color:var(--muted);
+    text-align:center;
+    opacity:.8;
+  }
+
+  /* 尊重系统的减少动效设置 */
+  @media (prefers-reduced-motion: reduce){
+    .item, .arrow{ transition:none; }
+    .item:hover{ transform:none; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>放松漂浮</h1>
+    <p class="sub">Floatwave</p>
+  </header>
+
+  <nav>
+    <!-- ↓↓↓ 只需按你的文件夹名改 href ↓↓↓ -->
+    <a class="item" href="./water/" style="--c:#5b8fae">
+      <span class="dot"></span>
+      <span class="text">
+        <span class="name">水域</span>
+        <span class="desc">水流与气泡，听一会儿就沉下去</span>
+      </span>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="item" href="./breeze/" style="--c:#7aa98b">
+      <span class="dot"></span>
+      <span class="text">
+        <span class="name">清风</span>
+        <span class="desc">风穿过树叶与窗缝，适合阅读</span>
+      </span>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="item" href="./night/" style="--c:#7d7fa6">
+      <span class="dot"></span>
+      <span class="text">
+        <span class="name">夜色</span>
+        <span class="desc">远处虫鸣与低频底噪，为入睡准备</span>
+      </span>
+      <span class="arrow">→</span>
+    </a>
+
+    <a class="item item--wip" href="./asmr/" style="--c:#a89384">
+      <span class="dot"></span>
+      <span class="text">
+        <span class="name">ASMR <span class="badge">打磨中</span></span>
+        <span class="desc">触发音与近场细节</span>
+      </span>
+      <span class="arrow">→</span>
+    </a>
+  </nav>
+
+  <footer>无广告 · 无追踪 · 打开即用</footer>
+
+</body>
+</html>
